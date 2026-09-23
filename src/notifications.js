@@ -21,11 +21,12 @@ function applicantSummary(applicant, account) {
 }
 
 function buildTelegramSummary(results, totalRuntime) {
-  const lines = ['KẾT QUẢ RUNNER INZ', `Thời gian hết: ${formatDuration(totalRuntime)}`,
-    `Tổng thời gian giải CAPTCHA: ${formatDuration(results.reduce((total, result) => total + result.captchaMs, 0))}`, ''];
+  const captchaRuntime = results.reduce((total, result) => total + result.captchaMs, 0);
+  const lines = ['KẾT QUẢ RUNNER INZ', `Thời gian chạy: ${formatDuration(totalRuntime)} (${totalRuntime} ms)`,
+    `Tổng thời gian giải CAPTCHA: ${formatDuration(captchaRuntime)} (${captchaRuntime} ms)`, ''];
   for (const result of results) {
-    lines.push(`[${result.status}] ${result.label}`, `Thời gian: ${formatDuration(result.runtimeMs)}`,
-      `Thời gian giải CAPTCHA: ${formatDuration(result.captchaMs)}`, result.applicantInfo, '');
+    lines.push(`[${result.status}] ${result.label}`, `Thời gian account: ${formatDuration(result.runtimeMs)} (${result.runtimeMs} ms)`,
+      `Thời gian CAPTCHA: ${formatDuration(result.captchaMs)} (${result.captchaMs} ms)`, result.applicantInfo, '');
   }
   return lines.join('\n').trim();
 }

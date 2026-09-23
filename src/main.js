@@ -13,17 +13,20 @@ function validateAccounts(accounts) {
 }
 
 async function runAccount(baseApplicant, account, index, args, extensionPath) {
+  const accountStartedAt = Date.now();
   let browser;
   try {
     await initializeAccountLogger(index, account.username); browser = await launchBrowser(args, index);
     if (extensionPath) await syncCapSolverApiKey(browser, path.resolve(config.root, extensionPath));
     const result = await runApplicant(browser, baseApplicant, account, index);
+    result.runtimeMs = Date.now() - accountStartedAt;
     await sendTelegramMessage(buildTelegramSummary([result], result.runtimeMs)).catch(error => console.error(`[TELEGRAM] ${result.label} lỗi gửi: ${error.message}`));
     return result;
   } catch (error) {
     await browser?.close().catch(() => {}); await initializeAccountLogger(index, account.username);
-    const result = { label: `account ${index + 1}: ${account.username}`, status: `ERROR: ${error.message}`, runtimeMs: 0, captchaMs: 0, applicantInfo: applicantSummary(baseApplicant, account) };
-    await sendTelegramMessage(buildTelegramSummary([result], 0)).catch(telegramError => console.error(`[TELEGRAM] ${result.label} lỗi gửi: ${telegramError.message}`));
+    const runtimeMs = Date.now() - accountStartedAt;
+    const result = { label: `account ${index + 1}: ${account.username}`, status: `ERROR: ${error.message}`, runtimeMs, captchaMs: 0, applicantInfo: applicantSummary(baseApplicant, account) };
+    await sendTelegramMessage(buildTelegramSummary([result], runtimeMs)).catch(telegramError => console.error(`[TELEGRAM] ${result.label} lỗi gửi: ${telegramError.message}`));
     return result;
   }
 }

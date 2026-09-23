@@ -39,8 +39,12 @@ async function waitForActionProgress(page, previousUrl, previousMarker, label) {
 }
 
 function formatDuration(milliseconds) {
-  const seconds = Math.round(milliseconds / 1000);
-  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${seconds % 60}s`;
+  const totalMs = Math.max(0, Math.round(milliseconds));
+  const hours = Math.floor(totalMs / 3600000);
+  const minutes = Math.floor((totalMs % 3600000) / 60000);
+  const seconds = Math.floor((totalMs % 60000) / 1000);
+  const remainingMs = totalMs % 1000;
+  return `${hours}h ${minutes}m ${seconds}s ${String(remainingMs).padStart(3, '0')}ms`;
 }
 
 module.exports = { sleep, resetPageScroll, watchActionProgress, waitForActionProgress, formatDuration };
