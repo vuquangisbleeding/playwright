@@ -9,6 +9,7 @@ async function isHighLoadPage(page) {
 async function recoverHighLoad(page, label) {
   for (let attempt = 1; attempt <= config.maxHighLoadRetries; attempt += 1) {
     if (!await isHighLoadPage(page)) return false;
+    // Delay cố định để tránh vừa spam server vừa chờ tăng theo cấp số nhân.
     const delay = config.highLoadBackoffMs;
     console.log(`[${label}] INZ đang quá tải (${attempt}/${config.maxHighLoadRetries}), thử lại sau ${delay}ms`);
     await sleep(delay);

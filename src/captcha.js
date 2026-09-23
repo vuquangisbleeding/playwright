@@ -44,17 +44,26 @@ async function pauseForCaptcha(page, label, stats = null) {
       captchaStats.totalMs += duration;
       if (stats) stats.captchaMs += duration;
       console.log(`[${label}] CAPTCHA solved duration=${formatDuration(duration)}`);
-      const submit = await page.$('#ContentPlaceHolder1_submitImageButton');
-      if (!submit) throw new Error('CAPTCHA đã giải nhưng không tìm thấy nút SUBMIT để tiếp tục');
-      console.log(`[${label}] CAPTCHA solved, click SUBMIT để tiếp tục`);
+      const submitSelector = await firstVisible(page, selectors.submit);
+      if (!submitSelector) throw new Error('CAPTCHA đã giải nhưng không tìm thấy nút SUBMIT đang hiển thị');
+      const submitState = await page.$eval(submitSelector, element => ({
+        disabled: Boolean(element.disabled),
+        id: element.id || '',
+        value: element.value || element.textContent?.trim() || ''
+      }));
+      if (submitState.disabled) throw new Error(`Nút SUBMIT đang disabled: ${submitSelector}`);
+      console.log(`[${label}] CAPTCHA solved, click SUBMIT selector=${submitSelector} id=${submitState.id}`);
       // Chờ navigation thật sự để vòng wizard không click lại trên context cũ.
       await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {}),
-        submit.click()
+        page.$eval(submitSelector, element => {
+          element.focus();
+          element.click();
+        })
       ]);
       return;
     }
-    await sleep(500);
+    await sleep(config.captchaPollMs);
   }
   const duration = Date.now() - startedAt;
   captchaStats.totalMs += duration;
