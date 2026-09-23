@@ -16,8 +16,15 @@ async function runAccount(baseApplicant, account, index, args, extensionPath) {
   const accountStartedAt = Date.now();
   let browser;
   try {
-    await initializeAccountLogger(index, account.username); browser = await launchBrowser(args, index);
-    if (extensionPath) await syncCapSolverApiKey(browser, path.resolve(config.root, extensionPath));
+    await initializeAccountLogger(index, account.username);
+    console.log(`[account ${index + 1}: ${account.username}] BROWSER_LAUNCH_START`);
+    browser = await launchBrowserWithTimeout(args, index, account.username);
+    console.log(`[account ${index + 1}: ${account.username}] BROWSER_LAUNCH_READY`);
+    if (extensionPath) {
+      console.log(`[account ${index + 1}: ${account.username}] CAPSOLVER_SYNC_START`);
+      await syncCapSolverApiKey(browser, path.resolve(config.root, extensionPath));
+      console.log(`[account ${index + 1}: ${account.username}] CAPSOLVER_SYNC_DONE`);
+    }
     const result = await runApplicant(browser, baseApplicant, account, index);
     result.runtimeMs = Date.now() - accountStartedAt;
     await sendTelegramMessage(buildTelegramSummary([result], result.runtimeMs)).catch(error => console.error(`[TELEGRAM] ${result.label} lỗi gửi: ${error.message}`));
@@ -29,6 +36,18 @@ async function runAccount(baseApplicant, account, index, args, extensionPath) {
     await sendTelegramMessage(buildTelegramSummary([result], runtimeMs)).catch(telegramError => console.error(`[TELEGRAM] ${result.label} lỗi gửi: ${telegramError.message}`));
     return result;
   }
+}
+
+async function launchBrowserWithTimeout(args, index, username) {
+  let timedOut = false;
+  const launch = launchBrowser(args, index).then(browser => {
+    if (timedOut) browser.close().catch(() => {});
+    return browser;
+  });
+  return Promise.race([launch, new Promise((_, reject) => setTimeout(() => {
+    timedOut = true;
+    reject(new Error(`Chrome launch timeout: ${username}`));
+  }, 30000))]);
 }
 
 async function main() {

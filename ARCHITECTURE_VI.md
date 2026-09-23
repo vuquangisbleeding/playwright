@@ -64,7 +64,7 @@ Thứ tự này cần được giữ ổn định. Nếu website thay HTML, cậ
 | Quan sát | `src/logger.js`, `src/notifications.js` | log file, account log, Telegram |
 | Selector | `src/selectors/` | locator của INZ |
 
-Mỗi file mã nguồn được giữ tối đa 100 dòng để dễ đọc và sửa độc lập.
+Mỗi file mã nguồn được giữ tối đa khoảng 200 dòng để dễ đọc nhưng không làm vỡ một flow nghiệp vụ chỉ vì giới hạn dòng.
 
 ## 5. Cách debug
 
@@ -104,4 +104,4 @@ Hai lệnh đầu là kiểm tra tĩnh an toàn. `npm start` mở Chrome thật 
 - Form mới đặt trong `src/forms/`, không thêm logic form vào `main.js`.
 - Selector mới đặt trong `src/selectors/`.
 - Logic click dùng `src/actions.js` để vẫn có wait, recovery và CAPTCHA handling.
-- Sau mỗi thay đổi chạy `node --check` và kiểm tra giới hạn 100 dòng.
+- Sau mỗi thay đổi chạy `node --check` và giữ file mã nguồn dưới khoảng 200 dòng khi hợp lý.

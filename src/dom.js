@@ -43,6 +43,8 @@ async function selectValue(page, selectors, value) {
   }, String(value));
   if (optionValue === null) throw new Error(`Không tìm thấy option "${value}" cho ${selector}`);
   await page.select(selector, optionValue);
+  const selected = await page.$eval(selector, select => select.options[select.selectedIndex]?.text?.trim() || '');
+  if (selected.toLowerCase() !== String(value).trim().toLowerCase()) throw new Error(`Không chọn được option "${value}" cho ${selector}, thực tế: "${selected}"`);
   return true;
 }
 
@@ -64,6 +66,30 @@ async function fillJobs(page, jobs, label) {
   }
   console.log(`[${label}] ${jobs.name || 'FILL'} hoàn tất`);
 }
+async function fillByQuestion(page, patterns, value, type) {
+  if (value === undefined || value === null || value === '') return false;
+  return page.evaluate(({ patterns: wanted, nextValue, fieldType }) => {
+    const matches = node => wanted.some(pattern => new RegExp(pattern, 'i').test(node.innerText || node.textContent || ''));
+    const labels = [...document.querySelectorAll('label, p, td, div, span')].filter(matches);
+    for (const label of labels) {
+      let row = label;
+      for (let level = 0; level < 5 && row; level += 1, row = row.parentElement) {
+        const field = row.querySelector(fieldType === 'select' ? 'select' : 'input:not([type="hidden"]),textarea');
+        if (!field) continue;
+        if (fieldType === 'select') {
+          const normalized = String(nextValue).trim().toLowerCase();
+          const option = [...field.options].find(item => item.value.trim().toLowerCase() === normalized || item.text.trim().toLowerCase() === normalized);
+          if (!option) return false;
+          field.value = option.value;
+        } else field.value = String(nextValue);
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      }
+    }
+    return false;
+  }, { patterns, nextValue: value, fieldType: type });
+}
 
 async function dumpUnknown(page, label) {
   const fields = await page.evaluate(() => [...document.querySelectorAll('input,select,textarea')]
@@ -72,4 +98,4 @@ async function dumpUnknown(page, label) {
   console.log(`[${label}] UNKNOWN_FIELDS ${fields.join(', ')}`);
 }
 
-module.exports = { firstExisting, firstVisible, fillText, selectValue, fillJobs, dumpUnknown };
+module.exports = { firstExisting, firstVisible, fillText, selectValue, fillJobs, fillByQuestion, dumpUnknown };

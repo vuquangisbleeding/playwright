@@ -36,10 +36,11 @@ async function selectSchemeCountry(page, country, label, stats) {
 }
 
 async function continueToApplication(page, applicant, label, stats) {
-  await page.waitForFunction(() => Boolean(document.querySelector('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id^="ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_"], [id$="familyNameTextBox"]')), { timeout: 30000 }).catch(() => {});
+  await page.waitForFunction(() => Boolean(document.querySelector('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id^="ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_"], [id$="familyNameTextBox"]') || [...document.querySelectorAll('a,button,input')].some(node => /existing|continue|resume|apply now/i.test(`${node.textContent} ${node.value} ${node.href}`))), { timeout: 30000 }).catch(() => {});
   if (/wizard/i.test(await page.url()) || await firstExisting(page, textSelectors.familyName)) return;
   const existing = await page.$("a[id^='ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_']");
-  if (existing) {
+  if (existing || await openExistingApplication(page, label)) {
+    if (!existing) return;
     console.log(`[${label}] OPEN_EXISTING`);
     const oldUrl = await page.url(); const oldMarker = await page.evaluate(() => (document.body?.innerText || '').slice(0, 500));
     const progress = watchActionProgress(page, oldUrl, oldMarker, label);
@@ -62,6 +63,25 @@ async function continueToApplication(page, applicant, label, stats) {
     return;
   }
   throw new Error(`Không tìm thấy entry hồ sơ sau login. ${(await page.evaluate(() => document.body?.innerText || '')).slice(0, 250)}`);
+}
+
+async function openExistingApplication(page, label) {
+  const previousUrl = await page.url();
+  const previousMarker = await page.evaluate(() => (document.body?.innerText || '').slice(0, 500));
+  const progress = watchActionProgress(page, previousUrl, previousMarker, label);
+  const clicked = await page.evaluate(() => {
+    const nodes = [...document.querySelectorAll('a,button,input[type="button"],input[type="submit"]')];
+    const target = nodes.find(node => {
+      const blob = `${node.id} ${node.textContent} ${node.value} ${node.href}`.replace(/\s+/g, ' ').toLowerCase();
+      return /wizard|existing application|continue|resume|edit/.test(blob) && node.getClientRects().length > 0 && !node.disabled;
+    });
+    if (!target) return false;
+    target.click(); return true;
+  });
+  if (!clicked) return false;
+  console.log(`[${label}] OPEN_EXISTING_FALLBACK`);
+  await progress;
+  return true;
 }
 
 module.exports = { continueToApplication };

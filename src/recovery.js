@@ -1,5 +1,6 @@
 const config = require('./config');
 const { sleep } = require('./timing');
+const refreshLocks = new WeakMap();
 
 async function isHighLoadPage(page) {
   const probe = page.evaluate(() => `${location.href} ${document.body?.innerText || ''}`)
@@ -9,6 +10,18 @@ async function isHighLoadPage(page) {
 }
 
 async function recoverHighLoad(page, label) {
+  const previousRefresh = refreshLocks.get(page);
+  if (previousRefresh) return previousRefresh;
+  const recovery = recoverHighLoadLocked(page, label);
+  refreshLocks.set(page, recovery);
+  try {
+    return await recovery;
+  } finally {
+    refreshLocks.delete(page);
+  }
+}
+
+async function recoverHighLoadLocked(page, label) {
   let attempt = 0;
   const batchSize = Math.max(1, config.maxHighLoadRetries);
   while (true) {
@@ -20,9 +33,12 @@ async function recoverHighLoad(page, label) {
     await sleep(delay);
     const startedAt = Date.now();
     console.log(`[${label}] HIGH_LOAD_REFRESH_START`);
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: config.highLoadReloadTimeoutMs }).catch(() => {});
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: config.highLoadReloadTimeoutMs })
+      .catch(error => console.log(`[${label}] HIGH_LOAD_REFRESH_TIMEOUT ${error.message}`));
     console.log(`[${label}] HIGH_LOAD_REFRESH_DONE duration=${Date.now() - startedAt}ms`);
-    if (batchAttempt === batchSize && await isHighLoadPage(page)) {
+    const stillHighLoad = await isHighLoadPage(page);
+    if (!stillHighLoad) return false;
+    if (batchAttempt === batchSize) {
       console.log(`[${label}] HIGH_LOAD_BATCH_COOLDOWN ${config.highLoadCooldownMs}ms`);
       await sleep(config.highLoadCooldownMs);
     }
