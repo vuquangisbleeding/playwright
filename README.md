@@ -1,5 +1,7 @@
 # Puppeteer multi-tab applicant runner
 
+Xem [ARCHITECTURE_VI.md](ARCHITECTURE_VI.md) để hiểu luồng chạy, trách nhiệm từng module và cách debug trước khi phát triển tiếp.
+
 Tool này mở **một Chrome profile riêng và đúng một tab cho mỗi tài khoản** trong `emails.json`. Mỗi profile có cookie/session Google riêng, nên tài khoản này không dùng chung trạng thái đăng nhập với tài khoản khác. Mọi dữ liệu khác được đọc từ `applicant.json`; trước khi chạy từng profile, tool tạo một bản sao dữ liệu và thay `contact.email` bằng email tương ứng.
 
 ## Cài đặt

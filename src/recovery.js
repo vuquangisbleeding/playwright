@@ -1,0 +1,21 @@
+const config = require('./config');
+const { sleep } = require('./timing');
+
+async function isHighLoadPage(page) {
+  const content = `${await page.url()} ${await page.evaluate(() => document.body?.innerText || '')}`;
+  return /site is under high load|currently experiencing high demand|system is busy|please try again later|try again later/i.test(content);
+}
+
+async function recoverHighLoad(page, label) {
+  for (let attempt = 1; attempt <= config.maxHighLoadRetries; attempt += 1) {
+    if (!await isHighLoadPage(page)) return false;
+    const delay = config.highLoadBackoffMs * (2 ** (attempt - 1));
+    console.log(`[${label}] INZ đang quá tải (${attempt}/${config.maxHighLoadRetries}), thử lại sau ${delay}ms`);
+    await sleep(delay);
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+  }
+  if (await isHighLoadPage(page)) throw new Error(`INZ vẫn đang quá tải sau ${config.maxHighLoadRetries} lần thử`);
+  return true;
+}
+
+module.exports = { isHighLoadPage, recoverHighLoad };
