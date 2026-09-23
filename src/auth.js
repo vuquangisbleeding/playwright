@@ -9,12 +9,19 @@ async function login(page, username, password, label, stats) {
   await page.goto(config.loginUrl, { waitUntil: 'domcontentloaded' });
   console.log(`[${label}] trang login: ${await page.url()}`);
   await recoverHighLoad(page, label); await pauseForCaptcha(page, label, stats);
-  await page.waitForFunction(() => Boolean(document.querySelector('input[name="username"], input[name="password"]') || document.querySelector('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id$="familyNameTextBox"]')), { timeout: 30000 }).catch(() => {});
+  await page.waitForFunction(() => Boolean(
+    document.querySelector('input[name="username"], input[name="password"]') ||
+    document.querySelector('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id^="ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_"], [id$="familyNameTextBox"]') ||
+    /logout|sign out|apply now|working holiday/i.test(document.body?.innerText || '')
+  ), { timeout: 30000 }).catch(() => {});
   const usernameSelector = await firstExisting(page, textSelectors.username);
   const passwordSelector = await firstExisting(page, textSelectors.password);
-  const authenticated = Boolean(await page.$('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id^="ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_"], [id$="familyNameTextBox"]'));
+  const authenticated = Boolean(await page.$('[id^="ContentPlaceHolder1_countryRepeater_countryName_"], #ContentPlaceHolder1_applyNowButton, [id^="ContentPlaceHolder1_applicationList_applicationsDataGrid_editHyperLink_"], [id$="familyNameTextBox"]')) || await page.evaluate(() => /logout|sign out|apply now|working holiday/i.test(document.body?.innerText || ''));
   if (!usernameSelector && !passwordSelector && authenticated) return console.log(`[${label}] LOGIN_SKIP đã đăng nhập, UI hiện tại: ${await page.url()}`);
-  if (!usernameSelector || !passwordSelector) throw new Error(`Không nhận diện được UI login/đã đăng nhập: ${await page.url()}`);
+  if (!usernameSelector || !passwordSelector) {
+    const state = await page.evaluate(() => ({ title: document.title, readyState: document.readyState, text: (document.body?.innerText || '').slice(0, 500) })).catch(() => ({}));
+    throw new Error(`Không nhận diện được UI login/đã đăng nhập: ${await page.url()} title=${state.title || ''} ready=${state.readyState || ''} text=${state.text || ''}`);
+  }
   await page.waitForSelector('input[name="username"]', { visible: true, timeout: 30000 });
   await page.waitForSelector('input[name="password"]', { visible: true, timeout: 30000 });
   await fillText(page, textSelectors.username, username); await fillText(page, textSelectors.password, password);
