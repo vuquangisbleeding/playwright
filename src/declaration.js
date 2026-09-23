@@ -10,7 +10,8 @@ async function fillDeclaration(page, applicant, label) {
     return { count: fields.length + roles.length, total: boxes.length + roles.length, fields, roleCount: roles.length, failed };
   }, config);
   console.log(`[${label}] FILL_DECLARATION ${checked.count}/${checked.total} fields=${checked.fields.join(',')} roleCheckboxes=${checked.roleCount} failed=${checked.failed.join(',') || 'none'}`);
-  if (checked.total === 0 || checked.count !== checked.total || checked.failed.length > 0) throw new Error(`Declaration chưa tick đủ Yes: ${checked.count}/${checked.total}`);
+  if (checked.total === 0) return checked;
+  if (checked.count !== checked.total || checked.failed.length > 0) throw new Error(`Declaration chưa tick đủ Yes: ${checked.count}/${checked.total}`);
   return checked;
 }
 

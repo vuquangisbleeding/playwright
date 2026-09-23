@@ -2,23 +2,33 @@ const config = require('./config');
 const { sleep } = require('./timing');
 
 async function isHighLoadPage(page) {
-  const content = `${await page.url()} ${await page.evaluate(() => document.body?.innerText || '')}`;
-  return /site is under high load|currently experiencing high demand|system is busy|please try again later|try again later/i.test(content);
+  try {
+    const content = `${await page.url()} ${await page.evaluate(() => document.body?.innerText || '')}`;
+    return /site is under high load|currently experiencing high demand|system is busy|please try again later|try again later/i.test(content);
+  } catch (error) {
+    console.log(`[HIGH_LOAD] không đọc được trang, tiếp tục retry: ${error.message}`);
+    return true;
+  }
 }
 
 async function recoverHighLoad(page, label) {
-  for (let attempt = 1; attempt <= config.maxHighLoadRetries; attempt += 1) {
+  let attempt = 0;
+  const batchSize = Math.max(1, config.maxHighLoadRetries);
+  while (true) {
+    attempt += 1;
     if (!await isHighLoadPage(page)) return false;
-    // Delay cố định để tránh vừa spam server vừa chờ tăng theo cấp số nhân.
+    const batchAttempt = ((attempt - 1) % batchSize) + 1;
     const delay = config.highLoadBackoffMs;
-    console.log(`[${label}] INZ đang quá tải (${attempt}/${config.maxHighLoadRetries}), thử lại sau ${delay}ms`);
+    console.log(`[${label}] INZ quá tải (${batchAttempt}/${batchSize}), refresh sau ${delay}ms; không dừng`);
     await sleep(delay);
     const startedAt = Date.now();
     await page.reload({ waitUntil: 'domcontentloaded', timeout: config.highLoadReloadTimeoutMs }).catch(() => {});
     console.log(`[${label}] HIGH_LOAD_REFRESH_DONE duration=${Date.now() - startedAt}ms`);
+    if (batchAttempt === batchSize && await isHighLoadPage(page)) {
+      console.log(`[${label}] HIGH_LOAD_BATCH_COOLDOWN ${config.highLoadCooldownMs}ms`);
+      await sleep(config.highLoadCooldownMs);
+    }
   }
-  if (await isHighLoadPage(page)) throw new Error(`INZ vẫn đang quá tải sau ${config.maxHighLoadRetries} lần thử`);
-  return true;
 }
 
 module.exports = { isHighLoadPage, recoverHighLoad };

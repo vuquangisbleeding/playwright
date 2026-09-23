@@ -52,7 +52,13 @@ async function walkWizard(page, applicant, account, label, stats, result, finish
     if (currentPage === 'pay_next') { await clickFirstControl(page, ['#ContentPlaceHolder1_onlinePaymentAnchor2', 'a[id$="onlinePaymentAnchor2"]', 'a[href*="PaymentGateway/OnLinePayment"]', 'a[href*="OnLinePayment.aspx"]'], pageLabel, stats); continue; }
     if (currentPage === 'pay_now') { await clickLabeled(page, ['PAY NOW'], ['PAY LATER'], pageLabel, stats); continue; }
     if (currentPage === 'unknown') { await dumpUnknown(page, label); return finish('STOP_UNKNOWN'); }
-    if (currentPage === 'declaration' || currentPage === 'submit') { await fillDeclaration(page, applicant, pageLabel); await pauseForCaptcha(page, pageLabel, stats); await clickFirstControl(page, actions.submit, pageLabel, stats) || await clickLabeled(page, ['SUBMIT'], ['CANCEL', 'PAY NOW', 'PAY LATER'], pageLabel, stats); continue; }
+    if (currentPage === 'declaration' || currentPage === 'submit') {
+      const declaration = await fillDeclaration(page, applicant, pageLabel);
+      if (declaration.total === 0) { console.log(`[${pageLabel}] DECLARATION_ALREADY_SUBMITTED`); continue; }
+      await pauseForCaptcha(page, pageLabel, stats);
+      await clickFirstControl(page, actions.submit, pageLabel, stats) || await clickLabeled(page, ['SUBMIT'], ['CANCEL', 'PAY NOW', 'PAY LATER'], pageLabel, stats);
+      continue;
+    }
     if (currentPage === 'personal1') await fillPersonal1(page, applicant, pageLabel);
     else if (currentPage === 'personal2') await fillIdentification(page, applicant, pageLabel);
     else if (currentPage === 'health') await fillHealth(page, applicant, pageLabel);
