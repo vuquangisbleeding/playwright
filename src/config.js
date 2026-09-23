@@ -11,6 +11,7 @@ const config = {
   maxWizardPages: Number(process.env.MAX_WIZARD_PAGES || 30),
   maxHighLoadRetries: Number(process.env.MAX_HIGH_LOAD_RETRIES || 6),
   highLoadBackoffMs: Number(process.env.HIGH_LOAD_BACKOFF_MS || 1500),
+  highLoadReloadTimeoutMs: Number(process.env.HIGH_LOAD_RELOAD_TIMEOUT_MS || 5000),
   schemeCountry: process.env.SCHEME_COUNTRY || '',
   countryPollMs: Number(process.env.COUNTRY_POLL_MS || 5000),
   captchaTimeoutMs: Number(process.env.CAPTCHA_TIMEOUT_MS || 120000),

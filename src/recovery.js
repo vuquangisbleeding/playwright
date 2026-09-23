@@ -9,10 +9,12 @@ async function isHighLoadPage(page) {
 async function recoverHighLoad(page, label) {
   for (let attempt = 1; attempt <= config.maxHighLoadRetries; attempt += 1) {
     if (!await isHighLoadPage(page)) return false;
-    const delay = config.highLoadBackoffMs * (2 ** (attempt - 1));
+    const delay = config.highLoadBackoffMs;
     console.log(`[${label}] INZ đang quá tải (${attempt}/${config.maxHighLoadRetries}), thử lại sau ${delay}ms`);
     await sleep(delay);
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+    const startedAt = Date.now();
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: config.highLoadReloadTimeoutMs }).catch(() => {});
+    console.log(`[${label}] HIGH_LOAD_REFRESH_DONE duration=${Date.now() - startedAt}ms`);
   }
   if (await isHighLoadPage(page)) throw new Error(`INZ vẫn đang quá tải sau ${config.maxHighLoadRetries} lần thử`);
   return true;
