@@ -28,7 +28,7 @@ async function isCaptchaSolved(page) {
     const checked = Boolean(document.querySelector('.recaptcha-checkbox-checked, [aria-checked="true"]'));
     const captchaUrl = /\/rs-captcha|\/captcha/i.test(location.href);
     return response || checked || (!captchaUrl && !document.querySelector('iframe[src*="captcha"], iframe[src*="recaptcha"], .g-recaptcha'));
-  });
+  }).catch(() => false);
 }
 
 async function pauseForCaptcha(page, label, stats = null) {
@@ -38,6 +38,7 @@ async function pauseForCaptcha(page, label, stats = null) {
   captchaStats.count += 1;
   console.log(`[${label}] CAPTCHA detected, CapSolver đang tự xử lý`);
   const deadline = startedAt + config.captchaTimeoutMs;
+  let nextHeartbeatAt = startedAt + 5000;
   while (Date.now() < deadline) {
     if (await isCaptchaSolved(page)) {
       const duration = Date.now() - startedAt;
@@ -62,6 +63,10 @@ async function pauseForCaptcha(page, label, stats = null) {
         })
       ]);
       return;
+    }
+    if (Date.now() >= nextHeartbeatAt) {
+      console.log(`[${label}] CAPTCHA vẫn đang chờ CapSolver elapsed=${formatDuration(Date.now() - startedAt)}`);
+      nextHeartbeatAt += 5000;
     }
     await sleep(config.captchaPollMs);
   }
