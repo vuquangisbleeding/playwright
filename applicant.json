@@ -1,0 +1,95 @@
+{
+  "address": {
+    "city": "Ha Noi",
+    "country": "Vietnam",
+    "postal_code": "100000",
+    "province": "Ha Noi",
+    "street_name": "Xuan Dinh",
+    "street_number": "789",
+    "suburb": "Bac Tu Liem"
+  },
+  "character": {
+    "charged": "No",
+    "convicted": "No",
+    "deported": "No",
+    "details": "",
+    "excluded": "No",
+    "imprisonment_12_months": "No",
+    "imprisonment_5_years": "No",
+    "removed": "No",
+    "under_investigation": "No"
+  },
+  "declaration": {
+    "all_yes": true,
+    "false_statement": "Yes",
+    "notes_and_questions": "Yes",
+    "changed_circumstances": "Yes",
+    "good_character": "Yes",
+    "information_sharing": "Yes",
+    "health_information": "Yes",
+    "advice": "Yes",
+    "occupation_registration": "Yes",
+    "entitlement": "Yes",
+    "permit_expiry": "Yes",
+    "medical_insurance": "Yes"
+  },
+  "contact": {
+    "communication_method": "Email",
+    "email": "quangnv.ftuforum@gmail.com",
+    "fax": "",
+    "has_agent": "No",
+    "has_credit_card": "Yes",
+    "phone_daytime": "0942361202",
+    "phone_mobile": "+84942361202",
+    "phone_night": ""
+  },
+  "health": {
+    "active_tb": "No",
+    "cancer": "No",
+    "disability": "No",
+    "heart_disease": "No",
+    "hospitalisation": "No",
+    "medical_details": "",
+    "pregnancy": "No",
+    "renal_dialysis": "No",
+    "residential_care": "No",
+    "tb_risk": "Yes"
+  },
+  "identification": {
+    "id_expiry_date": "",
+    "id_issue_date": "17 September, 2026",
+    "id_type": "National ID",
+    "passport_citizenship": "Croatia",
+    "passport_expiry": "8 September, 2033",
+    "passport_number": "E08977777"
+  },
+  "occupation": {
+    "industry_search": "",
+    "occupation_search": ""
+  },
+  "whs": {
+    "previous_whs_visa": "No",
+    "sufficient_funds_holiday": "Yes",
+    "travel_date": "20 November, 2026",
+    "been_to_nz": "No",
+    "been_to_nz_when": "",
+    "sufficient_funds_onward_ticket": "Yes",
+    "meet_scheme_requirements": "Yes"
+  },
+  "payment": {
+    "payer_name": "Vu Quang Nguyen"
+  },
+  "personal": {
+    "country_of_birth": "Vietnam",
+    "date_of_birth": "2 September, 2000",
+    "family_name": "Ha Tinh",
+    "gender": "Male",
+    "given_name_1": "Oi",
+    "given_name_2": "",
+    "given_name_3": "",
+    "other_names": "",
+    "other_title": "",
+    "title": "Mr"
+  },
+  "scheme_country": "CROATIA"
+}

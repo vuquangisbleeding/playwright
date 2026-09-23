@@ -1,0 +1,14 @@
+{
+  "name": "inz-puppeteer-multi-tab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Run one Puppeteer Chrome tab per applicant email.",
+  "main": "src/runner.js",
+  "scripts": {
+    "start": "node src/runner.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "puppeteer": "^24.20.0"
+  }
+}
