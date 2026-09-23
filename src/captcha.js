@@ -47,7 +47,11 @@ async function pauseForCaptcha(page, label, stats = null) {
       const submit = await page.$('#ContentPlaceHolder1_submitImageButton');
       if (!submit) throw new Error('CAPTCHA đã giải nhưng không tìm thấy nút SUBMIT để tiếp tục');
       console.log(`[${label}] CAPTCHA solved, click SUBMIT để tiếp tục`);
-      await submit.click();
+      // Chờ navigation thật sự để vòng wizard không click lại trên context cũ.
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {}),
+        submit.click()
+      ]);
       return;
     }
     await sleep(500);

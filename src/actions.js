@@ -1,4 +1,4 @@
-const { resetPageScroll, waitForActionProgress, sleep } = require('./timing');
+const { resetPageScroll, watchActionProgress, sleep } = require('./timing');
 const { isDeclarationUi, pauseForCaptcha } = require('./captcha');
 const { recoverHighLoad } = require('./recovery');
 
@@ -19,9 +19,10 @@ async function clickFirstControl(page, selectors, label, stats) {
     if (!state.visible || state.disabled) continue;
     const previousUrl = await page.url();
     const previousMarker = await page.evaluate(() => (document.body?.innerText || '').slice(0, 500));
+    const progress = watchActionProgress(page, previousUrl, previousMarker, label);
     await page.evaluate(element => element.click(), control);
     console.log(`[${label}] CLICK ${selector} id=${state.id} value=${state.value}`);
-    await waitForActionProgress(page, previousUrl, previousMarker, label);
+    await progress;
     await recoverHighLoad(page, label);
     if (await isDeclarationUi(page)) console.log(`[${label}] CAPTCHA_DEFERRED_UNTIL_DECLARATION_TICK`);
     else await pauseForCaptcha(page, label, stats);
@@ -34,6 +35,7 @@ async function clickFirstControl(page, selectors, label, stats) {
 async function clickLabeled(page, labels, excludes, label, stats) {
   const previousUrl = await page.url();
   const previousMarker = await page.evaluate(() => (document.body?.innerText || '').slice(0, 500));
+  const progress = watchActionProgress(page, previousUrl, previousMarker, label);
   const clicked = await page.evaluate(({ wanted, excluded }) => {
     const nodes = [...document.querySelectorAll('input,button,a,span')];
     const normalize = value => (value || '').replace(/\s+/g, ' ').trim().toUpperCase();
@@ -41,7 +43,7 @@ async function clickLabeled(page, labels, excludes, label, stats) {
     if (!element) return false; element.click(); return true;
   }, { wanted: labels.map(item => item.toUpperCase()), excluded: excludes.map(item => item.toUpperCase()) });
   if (!clicked) return false;
-  await waitForActionProgress(page, previousUrl, previousMarker, label);
+  await progress;
   await recoverHighLoad(page, label);
   if (await isDeclarationUi(page)) console.log(`[${label}] CAPTCHA_DEFERRED_UNTIL_DECLARATION_TICK`);
   else await pauseForCaptcha(page, label, stats);
