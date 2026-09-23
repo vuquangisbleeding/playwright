@@ -12,6 +12,7 @@ const config = {
   maxHighLoadRetries: Number(process.env.MAX_HIGH_LOAD_RETRIES || 10),
   highLoadBackoffMs: Number(process.env.HIGH_LOAD_BACKOFF_MS || 750),
   highLoadReloadTimeoutMs: Number(process.env.HIGH_LOAD_RELOAD_TIMEOUT_MS || 8000),
+  highLoadProbeTimeoutMs: Number(process.env.HIGH_LOAD_PROBE_TIMEOUT_MS || 1000),
   highLoadCooldownMs: Number(process.env.HIGH_LOAD_COOLDOWN_MS || 5000),
   schemeCountry: process.env.SCHEME_COUNTRY || '',
   countryPollMs: Number(process.env.COUNTRY_POLL_MS || 5000),
